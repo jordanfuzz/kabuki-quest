@@ -25,18 +25,21 @@ let forest = {
     name: 'Forest',
     description: 'You are in a dense forest with a small path headed north.',
     items: [key, shovel],
+    exits: {},
     actions: []
 }
 let shed = {
     name: 'Shed',
     description: 'You are standing in a shed, there is a door that opens to the South',
     items: [lantern],
+    exits: {},
     actions: []
 }
 let forestEast = {
     name: 'Forest',
     description: 'The forest isn\'t as dense here.  There is a deep well in front of \n\tyou. You can see a building to the east.',
     items: [],
+    exits: {},
     actions: []
 }
 let mansionGate = {
@@ -44,6 +47,7 @@ let mansionGate = {
     description: 'You see a giant gate, there is a mansion behind the gate.',
     items: [],
     isGateLocked: true,
+    exits: {},
     actions: {
         unlock: (response) => { 
             if (player.inventory.includes(key)) {
@@ -58,8 +62,8 @@ let mansionGate = {
                 writeHeader(currentLocation, 'It\'s locked.')
             }
             else{
-                mansionGate.e = mansion
-                mansion.w = mansionGate
+                mansionGate.exits.e = mansion
+                mansion.exits.w = mansionGate
                 writeHeader(currentLocation, 'You open the gate.')
             }
         }
@@ -69,15 +73,16 @@ let mansion = {
     name: 'Mansion',
     description: 'You are at the mansion',
     items: [],
+    exits: {},
     actions: []
 }
 
-forest.n = shed
-shed.s = forest
-forest.e = forestEast
-forestEast.w = forest
-forestEast.e = mansionGate
-mansionGate.w = forestEast
+forest.exits.n = shed
+shed.exits.s = forest
+forest.exits.e = forestEast
+forestEast.exits.w = forest
+forestEast.exits.e = mansionGate
+mansionGate.exits.w = forestEast
 
 currentLocation = forest
 
@@ -119,8 +124,8 @@ function handleResponse(response) {
 }
 
 function handleNavigation(direction){
-    if (currentLocation[direction]) {
-        currentLocation = currentLocation[direction]
+    if (currentLocation.exits[direction]) {
+        currentLocation = currentLocation.exits[direction]
         writeHeader(currentLocation)
     }
     else {
@@ -190,7 +195,6 @@ function handleDrop(response) {
     }
 
 }
-
 
 function writeHeader(location, ...lines) {
     charm.erase('screen')
