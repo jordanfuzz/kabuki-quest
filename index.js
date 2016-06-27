@@ -43,17 +43,26 @@ let mansionGate = {
     name: 'Mansion Gate',
     description: 'You see a giant gate, there is a mansion behind the gate.',
     items: [],
+    isGateLocked: true,
     actions: {
         unlock: (response) => { 
-            if (!player.inventory.includes(key)) {
-                mansionGate.e = mansion
+            if (player.inventory.includes(key)) {
+                mansionGate.isGateLocked = false
                 writeHeader(currentLocation, 'You unlock the gate.')
             }
-
             else
                 writeHeader(currentLocation, 'You don\'t have a key!')
         },
-        open: () => { return 'you can\t open the gate, it\s locked' }
+        open: (reponse) => {
+            if (mansionGate.isGateLocked){
+                writeHeader(currentLocation, 'It\'s locked.')
+            }
+            else{
+                mansionGate.e = mansion
+                mansion.w = mansionGate
+                writeHeader(currentLocation, 'You open the gate.')
+            }
+        }
     }
 }
 let mansion = {
@@ -68,10 +77,11 @@ shed.s = forest
 forest.e = forestEast
 forestEast.w = forest
 forestEast.e = mansionGate
+mansionGate.w = forestEast
 
 currentLocation = forest
 
-writeHeader(currentLocation, 'You wake up lying on your back.  You are in a forest.', 'Second line', 'Third line')
+writeHeader(currentLocation, 'You wake up lying on your back.  You are in a forest.')
 prompt()
 
 function prompt() {
@@ -121,7 +131,6 @@ function handleNavigation(direction){
 function handleAction(response) {
     let actions = Object.keys(currentLocation.actions)
     let command = response.substring(0, response.indexOf(' '))
-    console.log(actions, command)
     if (actions.includes(command)) {
         currentLocation.actions[command]()
         return true
