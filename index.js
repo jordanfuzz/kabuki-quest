@@ -71,7 +71,7 @@ let mansionGate = {
 }
 let mansion = {
     name: 'Mansion',
-    description: 'You are at the mansion',
+    description: 'You are at the mansion.  It is oh so nice.',
     items: [],
     exits: {},
     actions: []
@@ -196,11 +196,21 @@ function handleDrop(response) {
 
 }
 
+function showExits(){
+    let exits = ''
+    Object.keys(currentLocation.exits).forEach(direction => {
+        exits += directions[direction] + ', '
+    })
+    exits = exits.substring(0, exits.length - 2)
+    return exits
+}
+
 function writeHeader(location, ...lines) {
     charm.erase('screen')
     charm.foreground('cyan')
     charm.position(0,3)
     charm.write('Location: ' + location.name + '\n')
+    charm.write('Exits: ' + showExits() + '\n')
     charm.write('Description: ' + location.description + '\n\n')
     charm.foreground('yellow')
     lines.forEach((line) => charm.write(line+'\n'))
