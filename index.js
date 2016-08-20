@@ -12,13 +12,37 @@ let directions = {
     w: 'West'
 }
 let lantern = {
-    name: 'lantern'
+    name: 'lantern',
+    isLanternLit: false,
+    actions: {
+        light: (response) => {
+            if (player.inventory.includes(oil)){
+                lantern.isLanternLit = true
+                hallway.description = 'You are standing in the hallway, which is dark except \n\tfor the light cast from the lantern.  There are several\n\tpaintings on the walls.  There is a door at the far end of the hallway.'
+                hallway.exits.n = hallwayNorth
+                writeHeader(currentLocation, 'You light the lantern.')
+            }
+            else {
+                writeHeader(currentLocation, 'You don\'t have any oil!')
+            }
+        }
+    }
 }
 let shovel = {
-    name: 'shovel'
+    name: 'shovel',
+    actions: []
+}
+let oil = {
+    name: 'oil',
+    actions: []
 }
 let key = {
-    name: 'key'
+    name: 'key',
+    actions: []
+}
+let jim = {
+    name: 'Jim',
+    actions: []
 }
 
 let forest = {
@@ -49,7 +73,11 @@ let mansionGate = {
     isGateLocked: true,
     exits: {},
     actions: {
-        unlock: (response) => { 
+        unlock: (item) => {
+            if (item !== 'gate') {
+                writeHeader(currentLocation, 'Unlock what?')
+                return
+            }
             if (player.inventory.includes(key)) {
                 mansionGate.isGateLocked = false
                 writeHeader(currentLocation, 'You unlock the gate.')
@@ -57,7 +85,11 @@ let mansionGate = {
             else
                 writeHeader(currentLocation, 'You don\'t have a key!')
         },
-        open: (reponse) => {
+        open: (item) => {
+            if (item !== 'gate'){
+                writeHeader(currentLocation, 'Open what?')
+                return
+            }
             if (mansionGate.isGateLocked){
                 writeHeader(currentLocation, 'It\'s locked.')
             }
@@ -71,7 +103,42 @@ let mansionGate = {
 }
 let mansion = {
     name: 'Mansion',
-    description: 'You are at the mansion.  It is oh so nice.',
+    description: 'You are at the front door of the mansion.',
+    items: [],
+    exits: {},
+    actions: []
+}
+let foyer = {
+    name: 'Foyer',
+    description: 'You are standing in the mansion foyer.  The room is dark, but there \n\tis enough light coming through the windows to see.',
+    items: [oil],
+    exits: {},
+    actions: []
+}
+let hallway = {
+    name: 'Hallway',
+    description: 'You are standing in the hallway.  It is too dark to proceed.  You can\n\tsee the dimly lit foyer to the south.',
+    items: [],
+    exits: {},
+    actions: []
+}
+let hallwayNorth = {
+    name: 'Hallway',
+    description: 'You are in a dark hallway. There are doorways to the East and North.',
+    items: [],
+    exits: {},
+    actions: []
+}
+let grandBallroom = {
+    name: 'Grand Ballroom',
+    description: 'You are in a lovely ballroom.  The lighting is excellent.  You found Jim.  You win.',
+    items: [jim],
+    exits: {},
+    actions: []
+}
+let smeagolRoom = {
+    name: 'Smeagol Room',
+    description: 'It\'s just you and Smeagol here.  You might want to leave.',
     items: [],
     exits: {},
     actions: []
@@ -83,6 +150,15 @@ forest.exits.e = forestEast
 forestEast.exits.w = forest
 forestEast.exits.e = mansionGate
 mansionGate.exits.w = forestEast
+mansion.exits.n = foyer
+foyer.exits.s = mansion
+foyer.exits.n = hallway
+hallway.exits.s = foyer
+hallwayNorth.exits.s = hallway
+hallwayNorth.exits.n = grandBallroom
+hallwayNorth.exits.e = smeagolRoom
+grandBallroom.exits.s = hallwayNorth
+smeagolRoom.exits.w = hallwayNorth
 
 currentLocation = forest
 
@@ -115,10 +191,13 @@ function handleResponse(response) {
         handleDrop(response.substring(5))
     }
     else {
-        if (!handleAction(response))
+        let handled = handleLocationAction(response)
+
+        if (!handled)
+            handled = handleItemAction(response)
+
+        if (!handled)
             writeHeader(currentLocation, 'I don\'t know how to ' + response)
-        else
-            handleAction(response)
     }
     prompt()
 }
@@ -133,17 +212,40 @@ function handleNavigation(direction){
     }
 }
 
-function handleAction(response) {
+function handleLocationAction(response) {
     let actions = Object.keys(currentLocation.actions)
-    let command = response.substring(0, response.indexOf(' '))
+    let command, item
+    let spaceIndex = response.indexOf(' ')
+
+    if (spaceIndex != -1) {
+        command = response.substring(0, spaceIndex)
+        item = response.substring(spaceIndex + 1)
+    }
+    else {
+        command = response
+    }
+
     if (actions.includes(command)) {
-        currentLocation.actions[command]()
+        currentLocation.actions[command](item)
         return true
     }
     else {
         return false
     }
 }
+
+function handleItemAction(response) {
+    let command = response.substring(0, response.indexOf(' '))
+    let item = player.inventory.find(item => Object.keys(item.actions).includes(command))
+    if (item) {
+        item.actions[command]()
+        return true
+    }
+    else {
+        return false
+    }
+}
+
 function handleLook() {
     if (currentLocation.items.length === 0){
         writeHeader(currentLocation, 'There is nothing interesting here.')
