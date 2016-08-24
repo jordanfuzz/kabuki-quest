@@ -1,168 +1,15 @@
-let charm = require('charm')()
-let readline = initializeConsole()
-let currentLocation
+let world = require('./world')
+let writeHeader = require('./game-console')
+let directions = require('./directions')
+let readline = initializeReadline()
+
 let player = {
     inventory: []
 }
 
-let directions = {
-    n: 'North',
-    e: 'East',
-    s: 'South',
-    w: 'West'
-}
-let lantern = {
-    name: 'lantern',
-    isLanternLit: false,
-    actions: {
-        light: (response) => {
-            if (player.inventory.includes(oil)){
-                lantern.isLanternLit = true
-                hallway.description = 'You are standing in the hallway, which is dark except \n\tfor the light cast from the lantern.  There are several\n\tpaintings on the walls.  There is a door at the far end of the hallway.'
-                hallway.exits.n = hallwayNorth
-                writeHeader(currentLocation, 'You light the lantern.')
-            }
-            else {
-                writeHeader(currentLocation, 'You don\'t have any oil!')
-            }
-        }
-    }
-}
-let shovel = {
-    name: 'shovel',
-    actions: []
-}
-let oil = {
-    name: 'oil',
-    actions: []
-}
-let key = {
-    name: 'key',
-    actions: []
-}
-let jim = {
-    name: 'Jim',
-    actions: []
-}
 
-let forest = {
-    name: 'Forest',
-    description: 'You are in a dense forest with a small path headed north.',
-    items: [key, shovel],
-    exits: {},
-    actions: []
-}
-let shed = {
-    name: 'Shed',
-    description: 'You are standing in a shed, there is a door that opens to the South',
-    items: [lantern],
-    exits: {},
-    actions: []
-}
-let forestEast = {
-    name: 'Forest',
-    description: 'The forest isn\'t as dense here.  There is a deep well in front of \n\tyou. You can see a building to the east.',
-    items: [],
-    exits: {},
-    actions: []
-}
-let mansionGate = {
-    name: 'Mansion Gate',
-    description: 'You see a giant gate, there is a mansion behind the gate.',
-    items: [],
-    isGateLocked: true,
-    exits: {},
-    actions: {
-        unlock: (item) => {
-            if (item !== 'gate') {
-                writeHeader(currentLocation, 'Unlock what?')
-                return
-            }
-            if (player.inventory.includes(key)) {
-                mansionGate.isGateLocked = false
-                writeHeader(currentLocation, 'You unlock the gate.')
-            }
-            else
-                writeHeader(currentLocation, 'You don\'t have a key!')
-        },
-        open: (item) => {
-            if (item !== 'gate'){
-                writeHeader(currentLocation, 'Open what?')
-                return
-            }
-            if (mansionGate.isGateLocked){
-                writeHeader(currentLocation, 'It\'s locked.')
-            }
-            else{
-                mansionGate.exits.e = mansion
-                mansion.exits.w = mansionGate
-                writeHeader(currentLocation, 'You open the gate.')
-            }
-        }
-    }
-}
-let mansion = {
-    name: 'Mansion',
-    description: 'You are at the front door of the mansion.',
-    items: [],
-    exits: {},
-    actions: []
-}
-let foyer = {
-    name: 'Foyer',
-    description: 'You are standing in the mansion foyer.  The room is dark, but there \n\tis enough light coming through the windows to see.',
-    items: [oil],
-    exits: {},
-    actions: []
-}
-let hallway = {
-    name: 'Hallway',
-    description: 'You are standing in the hallway.  It is too dark to proceed.  You can\n\tsee the dimly lit foyer to the south.',
-    items: [],
-    exits: {},
-    actions: []
-}
-let hallwayNorth = {
-    name: 'Hallway',
-    description: 'You are in a dark hallway. There are doorways to the East and North.',
-    items: [],
-    exits: {},
-    actions: []
-}
-let grandBallroom = {
-    name: 'Grand Ballroom',
-    description: 'You are in a lovely ballroom.  The lighting is excellent.  You found Jim.  You win.',
-    items: [jim],
-    exits: {},
-    actions: []
-}
-let smeagolRoom = {
-    name: 'Smeagol Room',
-    description: 'It\'s just you and Smeagol here.  You might want to leave.',
-    items: [],
-    exits: {},
-    actions: []
-}
+writeHeader(world.currentLocation, 'You wake up lying on your back.  You are in a forest.')
 
-forest.exits.n = shed
-shed.exits.s = forest
-forest.exits.e = forestEast
-forestEast.exits.w = forest
-forestEast.exits.e = mansionGate
-mansionGate.exits.w = forestEast
-mansion.exits.n = foyer
-foyer.exits.s = mansion
-foyer.exits.n = hallway
-hallway.exits.s = foyer
-hallwayNorth.exits.s = hallway
-hallwayNorth.exits.n = grandBallroom
-hallwayNorth.exits.e = smeagolRoom
-grandBallroom.exits.s = hallwayNorth
-smeagolRoom.exits.w = hallwayNorth
-
-currentLocation = forest
-
-writeHeader(currentLocation, 'You wake up lying on your back.  You are in a forest.')
 prompt()
 
 function prompt() {
@@ -197,23 +44,23 @@ function handleResponse(response) {
             handled = handleItemAction(response)
 
         if (!handled)
-            writeHeader(currentLocation, 'I don\'t know how to ' + response)
+            writeHeader(world.currentLocation, 'I don\'t know how to ' + response)
     }
     prompt()
 }
 
 function handleNavigation(direction){
-    if (currentLocation.exits[direction]) {
-        currentLocation = currentLocation.exits[direction]
-        writeHeader(currentLocation)
+    if (world.currentLocation.exits[direction]) {
+        world.currentLocation = world.currentLocation.exits[direction]
+        writeHeader(world.currentLocation)
     }
     else {
-        writeHeader(currentLocation, 'You cannot go ' + directions[direction])
+        writeHeader(world.currentLocation, 'You cannot go ' + directions[direction])
     }
 }
 
 function handleLocationAction(response) {
-    let actions = Object.keys(currentLocation.actions)
+    let actions = Object.keys(world.currentLocation.actions)
     let command, item
     let spaceIndex = response.indexOf(' ')
 
@@ -226,7 +73,7 @@ function handleLocationAction(response) {
     }
 
     if (actions.includes(command)) {
-        currentLocation.actions[command](item)
+        world.currentLocation.actions[command](item, player.inventory)
         return true
     }
     else {
@@ -238,7 +85,7 @@ function handleItemAction(response) {
     let command = response.substring(0, response.indexOf(' '))
     let item = player.inventory.find(item => Object.keys(item.actions).includes(command))
     if (item) {
-        item.actions[command]()
+        item.actions[command](response, world, player.inventory)
         return true
     }
     else {
@@ -247,39 +94,39 @@ function handleItemAction(response) {
 }
 
 function handleLook() {
-    if (currentLocation.items.length === 0){
-        writeHeader(currentLocation, 'There is nothing interesting here.')
+    if (world.currentLocation.items.length === 0){
+        writeHeader(world.currentLocation, 'There is nothing interesting here.')
     }
     else {
         let itemList = ''
-        currentLocation.items.forEach(item => itemList += ', a ' + item.name)
+        world.currentLocation.items.forEach(item => itemList += ', a ' + item.name)
         itemList = itemList.substring(2)
-        writeHeader(currentLocation, 'You see: ' + itemList)
+        writeHeader(world.currentLocation, 'You see: ' + itemList)
     }
 }
 
 function viewInventory() {
     if (player.inventory.length === 0){
-        writeHeader(currentLocation, 'You got nothin\', bro.')
+        writeHeader(world.currentLocation, 'You got nothin\', bro.')
     }
     else {
         let itemList = ''
         player.inventory.forEach(item => itemList += ', a ' + item.name)
         itemList = itemList.substring(2)
-        writeHeader(currentLocation, 'You\'re carrying: ' + itemList)
+        writeHeader(world.currentLocation, 'You\'re carrying: ' + itemList)
     }
 }
 
 function handleTake(response) {
-    let item = currentLocation.items.find(item => item.name === response)
+    let item = world.currentLocation.items.find(item => item.name === response)
     if (!item) {
-        writeHeader(currentLocation, 'There is no ' + response + ' here.')
+        writeHeader(world.currentLocation, 'There is no ' + response + ' here.')
     }
     else {
         player.inventory.push(item)
-        let index = currentLocation.items.indexOf(item)
-        currentLocation.items.splice(index, 1)
-        writeHeader(currentLocation, 'You take the ' + item.name + '.')
+        let index = world.currentLocation.items.indexOf(item)
+        world.currentLocation.items.splice(index, 1)
+        writeHeader(world.currentLocation, 'You take the ' + item.name + '.')
     }
 
 }
@@ -287,53 +134,23 @@ function handleTake(response) {
 function handleDrop(response) {
     let item = player.inventory.find(item => item.name === response)
     if (!item) {
-        writeHeader(currentLocation, 'You don\'t have a ' + response + '.')
+        writeHeader(world.currentLocation, 'You don\'t have a ' + response + '.')
     }
     else {
-        currentLocation.items.push(item)
+        world.currentLocation.items.push(item)
         let index = player.inventory.indexOf(item)
         player.inventory.splice(index, 1)
-        writeHeader(currentLocation, 'You drop the ' + item.name + '.')
+        writeHeader(world.currentLocation, 'You drop the ' + item.name + '.')
     }
 
 }
 
-function showExits(){
-    let exits = ''
-    Object.keys(currentLocation.exits).forEach(direction => {
-        exits += directions[direction] + ', '
-    })
-    exits = exits.substring(0, exits.length - 2)
-    return exits
-}
-
-function writeHeader(location, ...lines) {
-    charm.erase('screen')
-    charm.foreground('cyan')
-    charm.position(0,3)
-    charm.write('Location: ' + location.name + '\n')
-    charm.write('Exits: ' + showExits() + '\n')
-    charm.write('Description: ' + location.description + '\n\n')
-    charm.foreground('yellow')
-    lines.forEach((line) => charm.write(line+'\n'))
-    charm.foreground('cyan')
-    charm.write('\n--------------------------------------------------------------------------------')
-    charm.position(0,30)
-}
-
-function initializeConsole() {
+function initializeReadline() {
     let readline = require('readline')
     let rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
     })
-
-    charm.pipe(process.stdout)
-    charm.reset()
-    charm.foreground('cyan')
-    return rl;
+    return rl
 }
 
-function printLine(someString) {
-    charm.write(line+'\n')
-}
