@@ -29,7 +29,7 @@ exports.key = {
     name: 'key',
     actions: []
 }
-exports.jim = {
-    name: 'Jim',
+exports.hamster = {
+    name: 'hamster',
     actions: []
 }

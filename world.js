@@ -88,8 +88,8 @@ let hallwayNorth = {
 }
 let grandBallroom = {
     name: 'Grand Ballroom',
-    description: 'You are in a lovely ballroom.  The lighting is excellent.  You found Jim.  You win.',
-    items: [items.jim],
+    description: 'You are in a lovely ballroom.  The lighting is excellent.  You found 12 hamsters.  You win.',
+    items: [items.hamster],
     exits: {},
     actions: []
 }

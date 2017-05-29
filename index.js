@@ -31,11 +31,14 @@ function handleResponse(response) {
     else if (response === 'inv' || response === 'inventory'){
         viewInventory()
     }
-    else if (response.substring(0,4) === 'take') {
-        handleTake(response.substring(5))
+    else if (takeCommandLength(response) > 0) {
+        handleTake(response.substring(takeCommandLength(response) + 1))
     }
-    else if (response.substring(0,4) === 'drop'){
-        handleDrop(response.substring(5))
+    else if (dropCommandLength(response) > 0) {
+        handleDrop(response.substring(dropCommandLength(response) + 1))
+    }
+    else if (response === 'help'){
+        displayHelp()
     }
     else {
         let handled = handleLocationAction(response)
@@ -94,6 +97,7 @@ function handleItemAction(response) {
 }
 
 function handleLook() {
+    writeHeader(world.currentLocation, world.currentLocation.advancedDefinition)
     if (world.currentLocation.items.length === 0){
         writeHeader(world.currentLocation, 'There is nothing interesting here.')
     }
@@ -143,6 +147,40 @@ function handleDrop(response) {
         writeHeader(world.currentLocation, 'You drop the ' + item.name + '.')
     }
 
+}
+
+function takeCommandLength(response) {
+    if (response.substring(0,4) === 'take') {
+        return 4
+    }
+    else if (response.substring(0,7) === 'pick up') {
+        return 7
+    }
+    else if (response.substring(0,4) === 'grab') {
+        return 4
+    }
+    else {
+        return 0
+    }
+}
+
+function dropCommandLength(response) {
+    if (response.substring(0,4) === 'drop') {
+        return 4
+    }
+    else if (response.substring(0,8) === 'put down') {
+        return 8
+    }
+    else if (response.substring(0,8) === 'set down') {
+        return 8
+    }
+    else {
+        return 0
+    }
+}
+
+function displayHelp(){
+    writeHeader(world.currentLocation, "Type n, e, s, or w to navigate around the world.", "Type \"look\" to look around you.")
 }
 
 function initializeReadline() {
